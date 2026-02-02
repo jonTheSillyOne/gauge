@@ -109,7 +109,7 @@ class Gauge:
             self.value = round(value, decimalPlace)
 
     def draw(self, screen):
-        sizeDifference = 10
+        sizeDifference = 5
         gaugeHeight = HEIGHT * self.height - (self.padding * 2)
         gaugeHeight = int(gaugeHeight * self.percent)
 
