@@ -1,203 +1,348 @@
 import pygame
+import math
 import sys
-import can
 import time
+import datetime
+import can
 
-# Initialize pygame
+
 pygame.init()
 
-# Window setup
-WIDTH, HEIGHT = 1024, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
-pygame.display.set_caption("Gauge display")
+WIDTH, HEIGHT = 1024,600
+screen = pygame.display.set_mode((WIDTH, HEIGHT),  pygame.NOFRAME)
 pygame.mouse.set_visible(False)
 
-# Colors (R, G, B)
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
+CENTER = (WIDTH/2, HEIGHT/2)
+
+WHITE = (255,255,255)
+BLACK = (0,0,0)
+RED = (255,0,0)
+GREEN = (0,255,0)
+BLUE = (0,0,255)
+GRAY = (60,60,60)
+
 
 clock = pygame.time.Clock()
 
-class Gauge:
-
-    #def __init__(self, x, y, min, max, redline, blueline, color):
-    #    self.x = x
-     #   self.y = y
-      #  self.min = min
-       # self.max = max
-        #self.redline = redline
-         #self.blueline = blueline
-          #self.color = color
-
-    color = (0,200,0)
-    redlineColor = (200,0,0)
-    bluelineColor = (0,0,200)
-    barColor = (50,50,50)
-
-    blueline = 0
-    redline = 0
-
-    redlinePercent = 0
-    bluelinePercent = 0
-
-    def __init__(self, xoffset, yoffset, height, width, min, max,name, padding):
-        self.xpos = xoffset
-        self.ypos = yoffset
-        self.height = height
-        self.width = width
-        self.min = min
-        self.max = max
-
-        self.name = name
-        self.padding = padding
-
-        self.markings = [-1]
+arcAngle = 24
+centerWidth = 80
+cwCeneter = True
+cwRight = False
+cwLeft = True
 
 
-
-    def warningLimits(self, redline,blueline, redlineColor = (200,0,0), bluelineColor = (0,0,200)):
-        self.redlineColor = redlineColor
-        self.bluelineColor = bluelineColor
-
-        self.redline = redline
-        self.blueline = blueline
-
-        if(redline >= self.min and redline <= self.max):
-            tempMin = self.min - self.max
-            tempValue = redline - self.max
-
-            self.redlinePercent = tempValue / tempMin
-        elif(redline > self.max):
-            self.redlinePercent = 1
-        elif(redline < self.min):
-            self.redlinePercent = 0
-
-        if(redline < 1):
-            self.redlinePercent = redline
-
-
-        if(blueline >= self.min and blueline <= self.max):
-            tempMax = self.max - self.min
-            tempValue = blueline - self.min
-
-            self.bluelinePercent = tempValue / tempMax
-        elif(blueline > self.max):
-            self.bluelinePercent = 1
-        elif(blueline < self.min):
-            self.bluelinePercent = 0
-
-        if(blueline < 1):
-            self.bluelinePercent = blueline
-
-    def update(self, value, decimalPlace = 0 ):
-
-
-        if(value >= self.min and value <= self.max):
-            tempMax = self.max - self.min
-            tempValue = value - self.min
-
-            self.percent = tempValue / tempMax
-        elif(value > self.max):
-            self.percent = 1
-        elif(value < self.min):
-            self.percent = 0
-
-        if decimalPlace == 0:
-            self.value = int(round(value))
-        else:
-            self.value = round(value, decimalPlace)
-
-    def draw(self, screen):
-        sizeDifference = 5
-        gaugeHeight = HEIGHT * self.height - (self.padding * 2)
-        gaugeHeight = int(gaugeHeight * self.percent)
-
-        redlineHeight = HEIGHT * self.height - (self.padding * 2)
-        redlineHeight = int(redlineHeight * self.redlinePercent)
-
-
-        bluelineHeight = HEIGHT * self.height - (self.padding * 2)
-        bluelineHeight = int(bluelineHeight * self.bluelinePercent)
-
-        if(self.markings[0] != -1):
-            xPos = int(self.xpos + (self.padding / 2))
-            xPosValue = int(self.xpos + WIDTH * (self.width / 2) - (self.padding/2))
-        else:
-            xPos = int(self.xpos+ self.padding)
-            xPosValue = int(self.xpos + WIDTH * self.width / 2)
-
-
-        #background
-        pygame.draw.rect(screen, self.color, (xPos, self.ypos + self.padding , int(WIDTH * self.width) - (self.padding * 2), int(HEIGHT * self.height) - self.padding *2))
-
-        #redline
-        pygame.draw.rect(screen, self.redlineColor , (xPos, self.ypos + self.padding, int(WIDTH * self.width) - (self.padding * 2), redlineHeight))
-
-        #blueline
-        pygame.draw.rect(screen, self.bluelineColor, (xPos, self.ypos + self.padding - bluelineHeight + int(HEIGHT * self.height) - self.padding *2, int(WIDTH * self.width) - (self.padding * 2), bluelineHeight))
-
-        #bar
-        pygame.draw.rect(screen, self.barColor, (xPos + sizeDifference, self.ypos + self.padding - gaugeHeight + int(HEIGHT * self.height) - self.padding *2, int(WIDTH * self.width) - (self.padding * 2) - (2 * sizeDifference), gaugeHeight))
-
-        #draw value
-        draw_text(screen, str(self.value), int(self.padding* (4/5)) , (255,255,255), (xPosValue, self.ypos + (self.padding / 2)), True)
-
-        #draw name
-        draw_text(screen, self.name, int(self.padding* (4/6)) , (255,255,255), (xPosValue, self.ypos - (self.padding / 2) + (HEIGHT * self.height)), True)
-
-
-        if(self.markings[0] != -1):
-            for value in self.markings:
-
-                percent = (value - self.min) / (self.max - self.min)
-
-                percent = 1 -percent
-
-                font = pygame.font.Font("./Hack-Regular.ttf", 20)
-
-
-
-                draw_text(screen, value, 20, (255,255,255), (self.xpos + int((WIDTH * self.width) - (self.padding*1.5)), self.ypos - (font.get_height()/2) + int((HEIGHT * self.height - (self.padding * 2)) * percent) + self.padding), False)
-
-
-
-
-
-    def markingsAmount(self,amount):
-
-        self.markings= []
-
-        bottom = self.max - self.min
-
-        i = 0
-
-        while(i <= amount):
-            self.markings.append(int((bottom * (i/amount)) + self.min))
-            i = i +1
-
-
-    #def markingsSpecific(self, one, two, three, four, five, six, seven, eight, nine, ten):
-
-
-
-    def getwidth(self):
-        return (WIDTH * self.width) + self.xpos
-
-    def getheight(self):
-        return (HEIGHT * self.height) + self.ypos
-
-
-
-def draw_text(screen, text, size, color, center, isCentered):
+def draw_text(screen, text, size, color, center, isCentered, angle = 0):
     font = pygame.font.Font("./Hack-Regular.ttf", size)
     surface = font.render(str(text), True, color)
+
+    surface = pygame.transform.rotate(surface, angle)
+
     if(isCentered):
         rect = surface.get_rect(center=center)
     else:
         rect = surface.get_rect(topleft=center)
 
     screen.blit(surface, rect)
+
+def xOffsetTriangle(angle):
+    return HEIGHT/2 * math.tan(math.radians(angle))
+def centerLine(value,  minValue, maxValue):
+    tempValue = value - minValue
+    percentage = tempValue / (maxValue -minValue)
+
+    degrees = 288 * percentage + 36
+    radians = math.radians(degrees)
+
+    outer = 310
+    length = 80
+
+    if(cwCeneter):
+        radians = -radians
+    
+    x1 = int(outer*math.sin(radians) + WIDTH/2)
+    y1 = int(outer*math.cos(radians) + HEIGHT/2)
+
+    x2 = int((outer-length)*math.sin(radians) + WIDTH/2)
+    y2 = int((outer-length)*math.cos(radians) + HEIGHT/2)
+
+    pygame.draw.line(screen, WHITE, (x1,y1), (x2,y2), 6)
+
+    draw_text(screen, value, 70, (255,255,255), (WIDTH/2, HEIGHT*0.9), True)
+def centerGauge():
+    pygame.draw.circle(screen, (20, 20, 20), (WIDTH/2, HEIGHT/2), HEIGHT/2 +20, centerWidth)
+
+    pygame.draw.polygon(screen, (0,0,0,255), (CENTER, (WIDTH/2 - xOffsetTriangle(36), HEIGHT), (WIDTH/2 + xOffsetTriangle(36), HEIGHT)))
+
+    centerMarkings(8,0,8000)
+def centerMarkings(count, minValue, maxValue):
+    for i in range (count + 1):
+
+        tempValue = maxValue - minValue
+        value = (tempValue/count) * i
+
+        percentage = value / (maxValue -minValue)
+
+        degrees = 288 * percentage + 36
+        radians = math.radians(degrees)
+
+        outer = 320
+        textOffset = 30
+
+        if(cwCeneter):
+            radians = -radians
+
+        x1 = int(outer*math.sin(radians) + WIDTH/2)
+        y1 = int(outer*math.cos(radians) + HEIGHT/2)
+
+        x2 = int((outer - centerWidth)*math.sin(radians) + WIDTH/2)
+        y2 = int((outer - centerWidth)*math.cos(radians) + HEIGHT/2)
+
+        x3 = int((outer - centerWidth - textOffset)*math.sin(radians) + WIDTH/2)
+        y3 = int((outer - centerWidth - textOffset)*math.cos(radians) + HEIGHT/2)
+
+        pygame.draw.line(screen, GRAY, (x1,y1), (x2,y2), 3)
+        draw_text(screen, int(value/1000), 40, WHITE, (x3,y3), True)
+
+def yOffsetTriangle(angle):
+    return WIDTH/2 * math.tan(math.radians(angle))
+def outerGauges():
+    pygame.draw.circle(screen, (20,20,20), (WIDTH/2, HEIGHT/2), HEIGHT/2 +180, centerWidth)
+
+    sideAngle = 9
+    bottomAngle = 90 - sideAngle - arcAngle
+
+    pygame.draw.polygon(screen, (0,0,0,255), (CENTER, (WIDTH, HEIGHT/2 - yOffsetTriangle(sideAngle)), (WIDTH, HEIGHT/2 + yOffsetTriangle(sideAngle)))) #r
+    pygame.draw.polygon(screen, (0,0,0,255), (CENTER, (0, HEIGHT/2 - yOffsetTriangle(sideAngle)), (0, HEIGHT/2 + yOffsetTriangle(sideAngle)))) #l
+
+    pygame.draw.polygon(screen, (0,0,0,255), (CENTER, (WIDTH/2 - xOffsetTriangle(bottomAngle), HEIGHT), (WIDTH/2 + xOffsetTriangle(bottomAngle), HEIGHT))) #b
+    pygame.draw.polygon(screen, (0,0,0,255), (CENTER, (WIDTH/2 - xOffsetTriangle(bottomAngle), 0), (WIDTH/2 + xOffsetTriangle(bottomAngle), 0))) #b
+
+    outerMarkings(arcAngle, sideAngle)
+def outerMarkings(arcAngle, sideAngle):
+    count = 8
+    rs = True #right side, true if right side
+    top = True #top or bottom, true if top
+    innerLine = True #horisontally inner or outer lines, true if inner line
+
+    value = 0
+
+    textOffset = 25
+
+    trMin = 65
+    trMax = 105
+
+    tlMin = 10
+    tlMax = 15
+
+    brMin = 0
+    brMax = 40
+
+    blMin = 0
+    blMax = 100
+
+    for i in range(count):
+        # 0 top right, 1 bottom right, 2 top left, 3 bottom left
+        match i:
+            case 0:
+                rs = True
+                top = True
+                innerLine = True
+            case 1:
+                rs = True
+                top = False
+                innerLine = True
+            case 2:
+                rs = False
+                top = True
+                innerLine = True
+            case 3:
+                rs = False
+                top = False
+                innerLine = True
+            case 4:
+                rs = True
+                top = True
+                innerLine = False
+            case 5:
+                rs = True
+                top = False
+                innerLine = False
+            case 6:
+                rs = False
+                top = True
+                innerLine = False
+            case 7:
+                rs = False
+                top = False
+                innerLine = False
+
+        outer = HEIGHT/2 + 180
+
+        degree = 90 - sideAngle
+
+        textDegree = 0 
+
+        if(rs and top):
+            degree = degree + sideAngle * 2
+            value = trMin
+            if(not innerLine):
+                degree = degree + arcAngle
+                value = trMax
+            textDegree = degree -90
+        elif(rs and not top):
+            degree = degree
+            value = brMax
+            if(not innerLine):
+                degree = degree - arcAngle
+                value = brMin
+            textDegree = degree -90
+        elif(not rs and top):
+            degree = -degree - sideAngle * 2
+            value = tlMin
+            if(not innerLine):
+                degree = degree - arcAngle
+                value = tlMax
+            textDegree = degree +90
+        elif(not rs and not top):
+            degree = -degree
+            value = blMax
+            if(not innerLine):
+                degree = degree + arcAngle
+                value = blMin
+            textDegree = degree +90
+        
+        x1 = int(outer*math.sin(math.radians(degree)) + WIDTH/2)
+        y1 = int(outer*math.cos(math.radians(degree)) + HEIGHT/2)
+
+        x2 = int((outer - centerWidth)*math.sin(math.radians(degree)) + WIDTH/2)
+        y2 = int((outer - centerWidth)*math.cos(math.radians(degree)) + HEIGHT/2)
+
+        x3 = int((outer - centerWidth - textOffset)*math.sin(math.radians(degree)) + WIDTH/2)
+        y3 = int((outer - centerWidth - textOffset)*math.cos(math.radians(degree)) + HEIGHT/2)
+
+        pygame.draw.line(screen, GRAY, (x1,y1), (x2,y2), 3)
+        draw_text(screen, value, 20, WHITE, (x3,y3), True, textDegree)
+
+def trLine(value, minimum, maximum):
+
+    outer = 480
+
+    tempValue = value - minimum
+    percentage = tempValue / (maximum -minimum)
+
+    degrees = arcAngle * percentage + 90 + 9
+
+    x1 = int((outer-10)*math.sin(math.radians(degrees)) + WIDTH/2)
+    y1 = int((outer-10)*math.cos(math.radians(degrees)) + HEIGHT/2)
+
+    x2 = int((outer-10-centerWidth)*math.sin(math.radians(degrees)) + WIDTH/2)
+    y2 = int((outer-10-centerWidth)*math.cos(math.radians(degrees)) + HEIGHT/2)
+
+    x3 = int((outer-centerWidth/2)*math.sin(math.radians(90 + 9/2)) + WIDTH/2)
+    y3 = int((outer-centerWidth/2)*math.cos(math.radians(90 + 9/2)) + HEIGHT/2)
+
+    x4 = int((outer - centerWidth - 40)*math.sin(math.radians(arcAngle * 0.5 + 90 + 9)) + WIDTH/2)
+    y4 = int((outer - centerWidth - 40)*math.cos(math.radians(arcAngle * 0.5 + 90 + 9)) + HEIGHT/2)
+
+    pygame.draw.line(screen, WHITE, (x1,y1), (x2,y2), 3)
+    draw_text(screen, str(int(value)) + "°C", 30, WHITE, (x3,y3), True) 
+    draw_text(screen, "WATER", 20, WHITE, (x4,y4), True, ((arcAngle * .5) + 9)) 
+def brLine(value, minimum, maximum):
+
+    outer = 480
+
+    percentage = (value-minimum) / (maximum-minimum)
+
+    degrees = (arcAngle * percentage) + 90 - 9 - arcAngle
+
+    x1 = int((outer-10)*math.sin(math.radians(degrees)) + WIDTH/2)
+    y1 = int((outer-10)*math.cos(math.radians(degrees)) + HEIGHT/2)
+
+    x2 = int((outer-10-centerWidth)*math.sin(math.radians(degrees)) + WIDTH/2)
+    y2 = int((outer-10-centerWidth)*math.cos(math.radians(degrees)) + HEIGHT/2)
+
+    x3 = int((outer-centerWidth/2)*math.sin(math.radians(90 - 9/2)) + WIDTH/2)
+    y3 = int((outer-centerWidth/2)*math.cos(math.radians(90 - 9/2)) + HEIGHT/2)
+
+    x4 = int((outer - centerWidth - 40)*math.sin(math.radians((arcAngle * .5) + 90 - 9 - arcAngle)) + WIDTH/2)
+    y4 = int((outer - centerWidth - 40)*math.cos(math.radians((arcAngle * .5) + 90 - 9 - arcAngle)) + HEIGHT/2)
+
+    pygame.draw.line(screen, WHITE, (x1,y1), (x2,y2), 3)
+    draw_text(screen, str(int(value)) + "°", 30, WHITE, (x3,y3), True)
+    draw_text(screen, "ADV", 20, WHITE, (x4,y4), True , -((arcAngle * .5) + 9))
+def tlLine(value, minimum, maximum):
+
+    outer = 480
+
+    tempValue = value - minimum
+    percentage = tempValue / (maximum -minimum)
+
+    degrees = -arcAngle * percentage - 90 - 9
+
+    x1 = int((outer-10)*math.sin(math.radians(degrees)) + WIDTH/2)
+    y1 = int((outer-10)*math.cos(math.radians(degrees)) + HEIGHT/2)
+
+    x2 = int((outer-10-centerWidth)*math.sin(math.radians(degrees)) + WIDTH/2)
+    y2 = int((outer-10-centerWidth)*math.cos(math.radians(degrees)) + HEIGHT/2)
+
+    x3 = int((outer-centerWidth/2)*math.sin(math.radians(-90 - 9/2)) + WIDTH/2)
+    y3 = int((outer-centerWidth/2)*math.cos(math.radians(-90 - 9/2)) + HEIGHT/2)
+
+    x4 = int((outer - centerWidth - 25)*math.sin(math.radians((arcAngle * .5) - 90 - 9 - arcAngle)) + WIDTH/2)
+    y4 = int((outer - centerWidth - 25)*math.cos(math.radians((arcAngle * .5) - 90 - 9 - arcAngle)) + HEIGHT/2)
+
+    pygame.draw.line(screen, WHITE, (x1,y1), (x2,y2), 3)
+    draw_text(screen, str(int(value)) + "V", 30, WHITE, (x3,y3), True)
+    draw_text(screen, "V", 20, WHITE, (x4,y4), True , -((arcAngle * .5) + 9))
+def blLine(value, minimum, maximum):
+
+    outer = 480
+
+    tempValue = value - minimum
+    percentage = tempValue / (maximum -minimum)
+
+    degrees = -arcAngle * percentage - 90 + 9 + arcAngle
+
+    x1 = int((outer-10)*math.sin(math.radians(degrees)) + WIDTH/2)
+    y1 = int((outer-10)*math.cos(math.radians(degrees)) + HEIGHT/2)
+
+    x2 = int((outer-10-centerWidth)*math.sin(math.radians(degrees)) + WIDTH/2)
+    y2 = int((outer-10-centerWidth)*math.cos(math.radians(degrees)) + HEIGHT/2)
+
+    x3 = int((outer-centerWidth/2)*math.sin(math.radians(-90 + 9/2)) + WIDTH/2)
+    y3 = int((outer-centerWidth/2)*math.cos(math.radians(-90 + 9/2)) + HEIGHT/2)
+
+    x4 = int((outer - centerWidth - 40)*math.sin(math.radians((arcAngle * .5) - 90 + 9)) + WIDTH/2)
+    y4 = int((outer - centerWidth - 40)*math.cos(math.radians((arcAngle * .5) - 90 + 9)) + HEIGHT/2)
+
+    pygame.draw.line(screen, WHITE, (x1,y1), (x2,y2), 3)
+    draw_text(screen, str(int(value)) + "%", 30, WHITE, (x3,y3), True)
+    draw_text(screen, "LOAD", 20, WHITE, (x4,y4), True, ((arcAngle * .5) + 9))
+
+def middleNumbers(speed):
+
+    draw_text(screen, int(speed), 100, WHITE, (WIDTH/2, HEIGHT/2 - 50), True)
+    draw_text(screen, "KM/H", 20, WHITE, (WIDTH/2, HEIGHT/2 + 10), True)
+    if(speed ==0):
+        speed = 1
+    minsPer100KM = 1/speed*100*60
+    if(minsPer100KM/60 >= 999):
+        draw_text(screen, ">999", 40, WHITE, (WIDTH/2, HEIGHT/2 + 50), True)
+        draw_text(screen,  "H/100KM", 20, WHITE, (WIDTH/2, HEIGHT/2 + 20+40 + 20), True)
+    elif(minsPer100KM > 120):
+        draw_text(screen, str(round(minsPer100KM/60,1)), 40, WHITE, (WIDTH/2, HEIGHT/2 + 50), True)
+        draw_text(screen,  "H/100KM", 20, WHITE, (WIDTH/2, HEIGHT/2 + 20+40 + 20), True)
+    else:
+        draw_text(screen, str(round(minsPer100KM,1)), 40, WHITE, (WIDTH/2, HEIGHT/2 + 50), True)
+        draw_text(screen,  "Min/100KM", 20, WHITE, (WIDTH/2, HEIGHT/2 + 20+40 + 20), True)
+def outsideText(tl):
+    time = datetime.datetime.now().strftime("%H:%M")
+    draw_text(screen,time, 25, WHITE, ((WIDTH/2) + (HEIGHT/2) - (centerWidth/2), 30), True)
+
+    draw_text(screen,str(int(tl))+ "°C", 25, WHITE, ((WIDTH/2) - (HEIGHT/2) + (centerWidth/2), 30), True)
+\
+REQ_ID = 0x7E0
+RESP_ID = 0x7E8
 
 def getSingleByte(pid):
     sendRequest(pid)
@@ -207,61 +352,12 @@ def getSingleByte(pid):
         return data[0]
     else:
         return 0
-
 def getTwoBytes(pid):
     sendRequest(pid)
     data = recvResponce(pid)
     if data and len(data) >= 2:
         return (data[0] << 8) | data[1]
     return 0
-
-padding = 40;
-
-#rpm = Gauge(100, 50, 0, 6000, 5000, 0 , (125,125,125))
-rpm = Gauge(0,0, 1, 1/6, 0, 8000,"RPM",padding)
-rpm.warningLimits(6400, 500)
-rpm.markingsAmount(8)
-
-speed = Gauge(rpm.getwidth(), 0, 1 ,1/6, 0, 150, "km/h" , padding)
-speed.warningLimits(140,0)
-speed.markingsAmount(15)
-
-engine = Gauge(speed.getwidth(), 0 , 1, 1/6,  0, 100, "Load", padding)
-engine.markingsAmount(10)
-
-throttle = Gauge(engine.getwidth(), 0 , 1, 1/6, 0, 100, "Throttle", padding)
-throttle.markingsAmount(10)
-
-#maf = Gauge(throttle.getwidth(), 0, 1, 1/6, 0, 400, "g/s", 30)
-#maf.markingsAmount(8)
-
-#fuel = Gauge(advance.getwidth(), 0 , 1, 1/6,  0, 100, "Gas", 30)
-#fuel.markingsAmount(10)
-
-battery = Gauge(throttle.getwidth(), 0 , 1/2 , 1/6,  5, 20, "V", padding)
-battery.warningLimits(15, 10)
-battery.markingsAmount(3)
-
-advance = Gauge(throttle.getwidth(), battery.getheight() , 1/2 ,1/6,  -50, 50, "advance", padding)
-advance.markingsAmount(8)
-
-temp = Gauge(battery.getwidth(), 0 , 1/2, 1/6, 75, 115, "Coolant", padding)
-temp.warningLimits(105, 85)
-temp.markingsAmount(4)
-
-
-airTemp = Gauge(battery.getwidth(), temp.getheight() , 1/2, 1/6, 0, 40, "Intake", padding)
-airTemp.markingsAmount(4)
-
-
-
-
-
-REQ_ID = 0x7E0
-RESP_ID = 0x7E8
-
-can_bus = can.Bus(channel="can0", interface="socketcan")
-
 def sendRequest(pid):
     msg = can.Message(
         arbitration_id=REQ_ID,
@@ -269,7 +365,6 @@ def sendRequest(pid):
         data=[0x02, 0x01, pid, 0, 0, 0, 0, 0]
     )
     can_bus.send(msg)
-
 def recvResponce(pid, timeout=0.2):
     start = time.time()
     while time.time() - start < timeout:
@@ -281,31 +376,23 @@ def recvResponce(pid, timeout=0.2):
     return None
 
 
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+i = 0
+up = True
+c = 85
+cUp = True
 
+
+while (True):
+    screen.set_alpha(128)
     screen.fill(BLACK)
 
-    airTemp.update(getSingleByte(0x0F) - 40)
-    airTemp.draw(screen)
+    outerGauges()
 
-    throttle.update(getSingleByte(0x11) * 100 / 255, 2)
-    throttle.draw(screen)
+    trLine(getSingleByte(0x05)-40,65,105)
+    brLine(getSingleByte(0x0E) /2 - 64,0,50)
 
-    advance.update(getSingleByte(0x0E) /2 - 64, 2)
-    advance.draw(screen)
-
-    #fuel.update((getSingleByte(0x2F) * 100 / 255), 2)
-    #fuel.draw(screen)
-
-    battery.update(getTwoBytes(0x42) / 1000, 2)
-    battery.draw(screen)
-
-    engine.update(getSingleByte(0x04) * 100 / 255)
-    engine.draw(screen)
+    tlLine(getTwoBytes(0x42) / 1000,10,15)
+    blLine(getSingleByte(0x04) * 100 / 255,0,100)
 
     sendRequest(0x0C)
     rawRpm = recvResponce(0x0C)
@@ -313,23 +400,12 @@ while True:
         rpmValue = ((rawRpm[0] << 8) | rawRpm[1]) / 4
     else:
         rpmValue = 0
-    rpm.update(rpmValue, 0)
-    rpm.draw(screen)
+    centerGauge()
+    centerLine(rpmValue, 0, 8000)
 
-    speed.update(getSingleByte(0x0D))
-    speed.draw(screen)
+    middleNumbers(getSingleByte(0x0D))
 
-    temp.update(getSingleByte(0x05)-40)
-    temp.draw(screen)
-
-    #data = recvResponce(0x10)
-    #f data and len(data) >= 2:
-    #    maf_val = ((data[0] << 8) | data[1]) / 100
-    #else:
-    #    maf_val = 0
-    #maf.update(maf_val, 0)
-    #maf.draw(screen)
-
+    outsideText(getSingleByte(0x0F) - 40)
 
     pygame.display.flip()
-    clock.tick(15)
+    clock.tick(20)
