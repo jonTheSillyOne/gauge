@@ -9,7 +9,7 @@ import can
 pygame.init()
 
 WIDTH, HEIGHT = 1024,600
-screen = pygame.display.set_mode((WIDTH, HEIGHT),  pygame.NOFRAME)
+screen = pygame.display.set_mode((WIDTH, HEIGHT),  pygame.FULLSCREEN)
 pygame.mouse.set_visible(False)
 
 CENTER = (WIDTH/2, HEIGHT/2)
