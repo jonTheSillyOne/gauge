@@ -335,12 +335,40 @@ def middleNumbers(speed):
     else:
         draw_text(screen, str(round(minsPer100KM,1)), 40, WHITE, (WIDTH/2, HEIGHT/2 + 50), True)
         draw_text(screen,  "Min/100KM", 20, WHITE, (WIDTH/2, HEIGHT/2 + 20+40 + 20), True)
-def outsideText(tl):
+def outsideText(tl, speed, rpm):
+
+    ratio = rpm/speed
+    g1r = 118
+    g2r = 64
+    g3r = 44
+    g4r = 27
+    g5r = 27 
+
+
+    gear = "N"
+    if(speed == 0):
+        gear = "N"
+    elif(ratio >= g1r - 5 & ratio <+ g1r + 5):
+        gear = "1"
+    elif(ratio >= g2r - 5 & ratio <+ g2r + 5):
+        gear = "2"
+    elif(ratio >= g3r - 5 & ratio <+ g3r + 5):
+        gear = "3"
+    elif(ratio >= g4r - 5 & ratio <+ g4r + 5):
+        gear = "4"
+    elif(ratio >= g5r - 5 & ratio <+ g5r + 5):
+        gear = "5"
+
+
     time = datetime.datetime.now().strftime("%H:%M")
+
     draw_text(screen,time, 25, WHITE, ((WIDTH/2) + (HEIGHT/2) - (centerWidth/2), 30), True)
 
     draw_text(screen,str(int(tl))+ "°C", 25, WHITE, ((WIDTH/2) - (HEIGHT/2) + (centerWidth/2), 30), True)
-\
+
+    draw_text(screen,time, 25, WHITE, ((WIDTH/2) + (HEIGHT/2) - (centerWidth/2), HEIGHT - 30), True)
+
+
 REQ_ID = 0x7E0
 RESP_ID = 0x7E8
 
@@ -390,11 +418,11 @@ while (True):
 
     outerGauges()
 
-    trLine(getSingleByte(0x05)-40,65,105)
-    brLine(getSingleByte(0x0E) /2 - 64,0,50)
+    trLine(getSingleByte(0x05)-40,65,105)#coolant
+    brLine(getSingleByte(0x0E) /2 - 64,0,50)#advance
 
-    tlLine(getTwoBytes(0x42) / 1000,10,15)
-    blLine(getSingleByte(0x04) * 100 / 255,0,100)
+    tlLine(getTwoBytes(0x42) / 1000,10,15)#volts
+    blLine(getSingleByte(0x04) * 100 / 255,0,100)#engine load
 
     sendRequest(0x0C)
     rawRpm = recvResponce(0x0C)
@@ -403,11 +431,12 @@ while (True):
     else:
         rpmValue = 0
     centerGauge()
-    centerLine(rpmValue, 0, 8000)
+    centerLine(int(rpmValue), 0, 8000)#rpm
 
-    middleNumbers(getSingleByte(0x0D))
+    speed = getSingleByte(0x0D)
+    middleNumbers(speed)#speed
 
-    outsideText(getSingleByte(0x0F) - 40)
+    outsideText(getSingleByte(0x0F) - 40, speed, rpmValue)#intake temp
 
     pygame.display.flip()
     clock.tick(20)
