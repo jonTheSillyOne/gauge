@@ -344,6 +344,8 @@ def outsideText(tl):
 REQ_ID = 0x7E0
 RESP_ID = 0x7E8
 
+can_bus = can.Bus(channel="can0", interface="socketcan")
+
 def getSingleByte(pid):
     sendRequest(pid)
     data = recvResponce(pid)
