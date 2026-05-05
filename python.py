@@ -352,15 +352,15 @@ def outsideText(tl, speed, rpm):
     gear = "N"
     if(speed == 0):
         gear = "N"
-    elif(ratio >= g1r - 5 & ratio <+ g1r + 5):
+    elif(ratio >= g1r - 5 and ratio <+ g1r + 5):
         gear = "1"
-    elif(ratio >= g2r - 5 & ratio <+ g2r + 5):
+    elif(ratio >= g2r - 5 and ratio <+ g2r + 5):
         gear = "2"
-    elif(ratio >= g3r - 5 & ratio <+ g3r + 5):
+    elif(ratio >= g3r - 5 and ratio <+ g3r + 5);
         gear = "3"
-    elif(ratio >= g4r - 5 & ratio <+ g4r + 5):
+    elif(ratio >= g4r - 5 and ratio <+ g4r + 5):
         gear = "4"
-    elif(ratio >= g5r - 5 & ratio <+ g5r + 5):
+    elif(ratio >= g5r - 5 and ratio <+ g5r + 5):
         gear = "5"
 
 
@@ -437,10 +437,10 @@ while (True):
     centerGauge()
     centerLine(int(rpmValue), 0, 8000)#rpm
 
-    speed = getSingleByte(0x0D)
-    middleNumbers(speed)#speed
+    kmph = getSingleByte(0x0D)
+    middleNumbers(kmph)#speed
 
-    outsideText(getSingleByte(0x0F) - 40, speed, rpmValue)#intake temp
+    outsideText(getSingleByte(0x0F) - 40, kmph, rpmValue)#intake temp
 
     pygame.display.flip()
     clock.tick(20)
