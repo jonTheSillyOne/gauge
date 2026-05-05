@@ -356,7 +356,7 @@ def outsideText(tl, speed, rpm):
         gear = "1"
     elif(ratio >= g2r - 5 and ratio <+ g2r + 5):
         gear = "2"
-    elif(ratio >= g3r - 5 and ratio <+ g3r + 5);
+    elif(ratio >= g3r - 5 and ratio <+ g3r + 5):
         gear = "3"
     elif(ratio >= g4r - 5 and ratio <+ g4r + 5):
         gear = "4"
