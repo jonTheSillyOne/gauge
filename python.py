@@ -370,7 +370,7 @@ def outsideText(tl, speed, rpm):
 
     draw_text(screen,str(int(tl))+ "°C", 25, WHITE, ((WIDTH/2) - (HEIGHT/2) + (centerWidth/2), 30), True)
 
-    draw_text(screen,time, 25, WHITE, ((WIDTH/2) + (HEIGHT/2) - (centerWidth/2), HEIGHT - 30), True)
+    draw_text(screen,gear, 25, WHITE, ((WIDTH/2) + (HEIGHT/2) - (centerWidth/2), HEIGHT - 30), True)
 
 
 REQ_ID = 0x7E0
