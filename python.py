@@ -348,7 +348,8 @@ def outsideText(tl, speed, rpm):
     g4r = 33
     g5r = 27 
 
-
+    textSize = 35
+    
     gear = "N"
     if(speed == 0):
         gear = "N"
@@ -366,11 +367,11 @@ def outsideText(tl, speed, rpm):
 
     time = datetime.datetime.now().strftime("%H:%M")
 
-    draw_text(screen,time, 25, WHITE, ((WIDTH/2) + (HEIGHT/2) - (centerWidth/2), 30), True)
+    draw_text(screen,time, textSize, WHITE, ((WIDTH/2) + (HEIGHT/2) - (centerWidth/2), 30), True)
 
-    draw_text(screen,str(int(tl))+ "°C", 25, WHITE, ((WIDTH/2) - (HEIGHT/2) + (centerWidth/2), 30), True)
+    draw_text(screen,str(int(tl))+ "°C", textSize, WHITE, ((WIDTH/2) - (HEIGHT/2) + (centerWidth/2), 30), True)
 
-    draw_text(screen,gear, 25, WHITE, ((WIDTH/2) + (HEIGHT/2) - (centerWidth/2), HEIGHT - 30), True)
+    #draw_text(screen,gear, textSize, WHITE, ((WIDTH/2) + (HEIGHT/2) - (centerWidth/2), HEIGHT - 30), True)
 
 
 REQ_ID = 0x7E0
