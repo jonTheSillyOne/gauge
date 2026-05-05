@@ -337,11 +337,15 @@ def middleNumbers(speed):
         draw_text(screen,  "Min/100KM", 20, WHITE, (WIDTH/2, HEIGHT/2 + 20+40 + 20), True)
 def outsideText(tl, speed, rpm):
 
-    ratio = rpm/speed
+    if(rpm == 0 or speed == 0):
+        gear = "N"
+    else:
+        ratio = rpm/speed
+    
     g1r = 118
     g2r = 64
     g3r = 44
-    g4r = 27
+    g4r = 33
     g5r = 27 
 
 
